@@ -24,6 +24,7 @@
 
     display_msg " "
     ksh -c "echo Welcome to QNX $(uname -r) on $(uname -m) !"
+    display_msg "This build is a part of Automotive Safety Gateway project by Pratik Suryawanshi"
     display_msg " "
 
     slogger2
@@ -70,6 +71,23 @@
     #devc-serpl011 -b115200 -c48000000 -e -F -u1 0xfe201000,153
     waitfor /dev/ser1
     #reopen /dev/ser1
+
+
+    #######################################################################
+    ## Edge Node SERIAL Driver (UART3 / PL011)
+    #######################################################################
+    display_msg "----------------------------------------"
+    display_msg "ASG: Starting Sensor Link on UART3..."
+    display_msg "ASG: Driver -> devc-serpl011 (GIC 153)"
+    display_msg "----------------------------------------"
+
+    # Start the driver: Enhanced mode, 115200 baud, 48MHz clock, GIC 153.
+    # NOTE: Hardware Flow Control (-F) is explicitly EXCLUDED for bare-metal link.
+    devc-serpl011 -e -b115200 -c48000000 0xfe201600,153
+
+    # Critically important: Tell the boot script to pause until the node exists
+    waitfor /dev/ser2 10
+    display_msg "ASG: /dev/ser2 is ready for Edge Node ingest."
 
 
     ############################################################################################
@@ -800,7 +818,7 @@ usb_start.sh = {
     waitfor /dev/usb/io-usb-otg
     #waitfor /dev/usb/devu-hcd-bcm2711-xhci.so
     # Start the Mass Storage driver and bypass UAS for JMicron
-    echo "Starting USB Storage (UAS Bypass)..."
+    echo "ASG: Starting USB Storage (UAS Bypass)..."
     devb-umass cam pnp noslow umass prot=umass wait=30
     waitfor /dev/hd0 30
     # This is a QNX naming quirk, as we are using USB SSD without UAS, the naming convention needs to be fixed!
